@@ -1,0 +1,20 @@
+# Core scientific stack
+numpy>=1.26
+pandas>=2.0
+scikit-learn>=1.4
+torch>=2.2
+
+# Tabular foundation models used by the experiment runners.
+# Install versions compatible with the checkpoints you use locally.
+tabpfn
+tabicl
+
+# GPU execution requires a PyTorch build compatible with your CUDA runtime.
+# If pip installs a CPU-only torch wheel, reinstall torch from the official
+# PyTorch index for your CUDA version before running with --device cuda.
+
+# TFMs CKPTS Links:
+
+# TABPFN: https://huggingface.co/Prior-Labs/tabpfn_2_5/tree/main
+
+# TABICL: https://huggingface.co/jingang/TabICL/tree/main

@@ -1,0 +1,39 @@
+.DS_Store
+__pycache__/
+*.py[cod]
+*.so
+.ipynb_checkpoints/
+
+# Local environments
+.venv/
+venv/
+env/
+
+# Model checkpoints and large binaries
+*.pt
+*.pth
+*.onnx
+*.ckpt
+
+# Logs and ad hoc run outputs
+*.log
+*.out
+nohup.out
+
+# LaTeX build products
+*.aux
+*.bbl
+*.blg
+*.fdb_latexmk
+*.fls
+*.log
+*.out
+*.synctex.gz
+*.toc
+
+# Local experiment outputs not intentionally curated
+experiments/**/results/
+experiments/**/data/
+experiments/**/__pycache__/
+
+

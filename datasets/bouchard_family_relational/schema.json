@@ -1,0 +1,141 @@
+{
+  "dataset_name": "bouchard_family_relational",
+  "tables": {
+    "families": {
+      "primary_key": "family_id",
+      "columns": {
+        "family_id": "string",
+        "family_name": "string",
+        "num_generations": "integer",
+        "num_people": "integer"
+      }
+    },
+    "persons": {
+      "primary_key": "person_id",
+      "columns": {
+        "person_id": "string",
+        "family_id": "string",
+        "display_name": "string",
+        "family_local_index": "integer",
+        "sex": "categorical",
+        "generation": "integer",
+        "branch_id": "integer",
+        "role_code": "categorical",
+        "is_blood_relative_to_root": "boolean_int"
+      }
+    },
+    "marriages": {
+      "primary_key": "marriage_id",
+      "columns": {
+        "marriage_id": "string",
+        "family_id": "string",
+        "husband_id": "string",
+        "wife_id": "string"
+      }
+    },
+    "parent_child_edges": {
+      "primary_key": "edge_id",
+      "columns": {
+        "edge_id": "string",
+        "family_id": "string",
+        "parent_id": "string",
+        "child_id": "string",
+        "parent_role": "categorical"
+      }
+    },
+    "relation_types": {
+      "primary_key": "relation_id",
+      "columns": {
+        "relation_id": "string",
+        "relation_name": "string",
+        "relation_group": "categorical",
+        "arity": "integer"
+      }
+    },
+    "pair_relation_atoms": {
+      "primary_key": "atom_id",
+      "columns": {
+        "atom_id": "string",
+        "family_id": "string",
+        "relation_id": "string",
+        "relation": "string",
+        "source_person_id": "string",
+        "target_person_id": "string",
+        "label": "boolean_int",
+        "split": "categorical",
+        "split_random": "categorical",
+        "split_evidence_p10": "categorical",
+        "split_family_p10": "categorical",
+        "split_family_p00": "categorical"
+      }
+    }
+  },
+  "foreign_keys": [
+    {
+      "child_table": "persons",
+      "child_column": "family_id",
+      "parent_table": "families",
+      "parent_column": "family_id"
+    },
+    {
+      "child_table": "marriages",
+      "child_column": "family_id",
+      "parent_table": "families",
+      "parent_column": "family_id"
+    },
+    {
+      "child_table": "marriages",
+      "child_column": "husband_id",
+      "parent_table": "persons",
+      "parent_column": "person_id"
+    },
+    {
+      "child_table": "marriages",
+      "child_column": "wife_id",
+      "parent_table": "persons",
+      "parent_column": "person_id"
+    },
+    {
+      "child_table": "parent_child_edges",
+      "child_column": "family_id",
+      "parent_table": "families",
+      "parent_column": "family_id"
+    },
+    {
+      "child_table": "parent_child_edges",
+      "child_column": "parent_id",
+      "parent_table": "persons",
+      "parent_column": "person_id"
+    },
+    {
+      "child_table": "parent_child_edges",
+      "child_column": "child_id",
+      "parent_table": "persons",
+      "parent_column": "person_id"
+    },
+    {
+      "child_table": "pair_relation_atoms",
+      "child_column": "family_id",
+      "parent_table": "families",
+      "parent_column": "family_id"
+    },
+    {
+      "child_table": "pair_relation_atoms",
+      "child_column": "relation_id",
+      "parent_table": "relation_types",
+      "parent_column": "relation_id"
+    },
+    {
+      "child_table": "pair_relation_atoms",
+      "child_column": "source_person_id",
+      "parent_table": "persons",
+      "parent_column": "person_id"
+    },
+    {
+      "child_table": "pair_relation_atoms",
+      "child_column": "target_person_id",
+      "parent_table": "persons",
+      "parent_column": "person_id"
+    }
+  ]
+}

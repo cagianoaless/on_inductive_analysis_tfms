@@ -1,0 +1,14 @@
+{
+  "dataset_name": "bouchard_family_relational",
+  "random_seed": 20260419,
+  "num_families": 5,
+  "num_people": 115,
+  "num_relations": 17,
+  "num_atoms": 44965,
+  "notes": [
+    "Within-family candidate atoms only; cross-family pairs are omitted.",
+    "The family layout is paper-aligned at 23 persons per family.",
+    "split_evidence_p10 keeps all core relations in train and samples 10% of derived atoms into train.",
+    "split_family_p00 withholds all derived atoms from the fifth family from training."
+  ]
+}
