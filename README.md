@@ -34,7 +34,7 @@ The main empirical conclusion is conservative: TFMs learn useful relational sign
 │   └── family/
 ├── reports/
 ├── papers/
-│   └── trouillon_inductive_analysis_2019.pdf
+│   └── trouillon_inductive_abilities_2019.pdf
 ├── requirements.txt
 └── .gitignore
 ```
@@ -70,7 +70,7 @@ results/family/
 The original reference paper used to reconstruct the benchmark logic is included under:
 
 ```text
-papers/trouillon_inductive_analysis_2019.pdf
+papers/trouillon_inductive_abilities_2019.pdf
 ```
 
 ## Installation
@@ -220,6 +220,6 @@ The main interpretation files are:
 - `reports/bouchard_family_tfm_results_report.md`
 - `reports/bouchard_materials_how_to_check_them.md`
 
-The reference PDF for the original inductive relational-learning benchmark is:
+The reference PDF for the original inductive abilities benchmark is:
 
-- `papers/trouillon_inductive_analysis_2019.pdf`
+- `papers/trouillon_inductive_abilities_2019.pdf`
