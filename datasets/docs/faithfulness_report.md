@@ -1,27 +1,28 @@
-# Faithfulness Report
+# Dataset Faithfulness Report
 
-This report covers the datasets generated under:
+This report covers the packaged family dataset:
 
 - [bouchard_family_relational/](../bouchard_family_relational)
 
-The original working tree also contained a flat denormalized export. That flat export is not included in this curated package because the experiments use the normalized relational triples.
-
-The generator used was:
+The generator used to build it is:
 
 - [build_bouchard_family_datasets.py](../../scripts/build_bouchard_family_datasets.py)
 
 ## Scope
 
-This is a faithful build of the **family / kinship** half of the 2019 Bouchard paper in two export formats:
+The included dataset is the family/kinship part of the Bouchard-style inductive-abilities benchmark. It is exported as a normalized relational package because the TFM experiments consume triples of the form:
 
-- one flat denormalized table
-- one normalized relational package with explicit PK/FK links
+```text
+(relation, source_person_id, target_person_id) -> label
+```
 
-It is **not** a full reproduction of the paper's other experiment family on atomic binary-relation properties.
+The generator can also produce a denormalized flat table, but the flat export is not included in this curated repo folder.
 
-## What Matches The Paper
+The atomic binary-relation benchmark is separate and is documented under [../../experiments/bouchard_atomic_tfm_experiment](../../experiments/bouchard_atomic_tfm_experiment).
 
-These points are paper-aligned:
+## What Matches The Intended Family Setup
+
+These points are aligned with the family benchmark structure:
 
 - `5` disjoint families
 - `3` generations
@@ -32,11 +33,7 @@ These points are paper-aligned:
 - `115` persons total
 - within-family candidate atoms only
 - total family atom count `5 x 23 x 23 x 17 = 44,965`
-- paper-inspired split logic included as columns on every atom
-
-These claims are validated in:
-
-- [bouchard_family_relational/validation_report.md](../bouchard_family_relational/validation_report.md)
+- paper-inspired random, evidence, and family split columns
 
 Observed generated counts:
 
@@ -47,27 +44,25 @@ Observed generated counts:
 - relation types: `17`
 - pair-relation atoms: `44,965`
 
-Per-family structure in the generated data:
+The structural checks are recorded in:
 
-- persons per family: `23`
-- marriages per family: `10`
-- parent-child edges per family: `24`
+- [bouchard_family_relational/validation_report.md](../bouchard_family_relational/validation_report.md)
 
-## Split Faithfulness
+## Split Columns
 
-The generated atoms include these split columns:
+The generated atoms include:
 
 - `split_random`
 - `split_evidence_p10`
 - `split_family_p10`
 - `split_family_p00`
 
-How they map to the paper:
+Interpretation:
 
-- `split_random`: standard train/val/test random split
-- `split_evidence_p10`: all 4 core relations forced into train, with `p = 0.1` for the 13 derived relations
-- `split_family_p10`: all relations for four families in train, core relations for the fifth family in train, plus `p = 0.1` of fifth-family derived relations in train
-- `split_family_p00`: same family holdout setup, but with `p = 0.0`, the hardest paper setting
+- `split_random`: standard train/validation/test atom split.
+- `split_evidence_p10`: all core relations are train evidence, with `p = 0.1` for derived relations.
+- `split_family_p10`: four families are train evidence; the held-out family keeps core relations plus `p = 0.1` of derived facts as support.
+- `split_family_p00`: same family holdout setup, but with no held-out-family derived support facts.
 
 Observed split sizes:
 
@@ -78,69 +73,13 @@ Observed split sizes:
 
 ## Deliberate Deviations
 
-These are the main places where the build is pragmatic rather than a strict line-by-line reproduction:
+These are pragmatic reconstruction choices:
 
-- I exported the same synthetic family world in two formats because you asked for one flat dataset and one relational dataset. The paper itself does not present this flat-vs-relational packaging.
-- I materialized one deterministic world, not the paper's full repeated benchmark sweep.
-- I included only the family experiment family, not the separate atomic-relation-property generator.
-- I implemented the split logic as reusable split columns on every atom rather than as separate benchmark runs.
-- I added a synthetic `event_time` column to the flat table so it is usable with the existing flat-table tooling in this repo.
-
-## Important Structural Approximation
-
-The paper gives the high-level family recipe and the target counts, but not a complete low-level construction listing for all `23` persons.
-
-To hit the paper count exactly while keeping the family graph simple and rule-compatible, the generator uses:
-
-- one root couple
-- three generation-1 children
-- one spouse for each generation-1 child
-- three generation-2 children for each generation-1 couple
-- spouses for six of the generation-2 children
-
-This yields exactly `23` persons per family and preserves the kinship logic needed for:
-
-- sibling relations
-- aunt/uncle and nephew/niece
-- cousin
-- grandparent and grandchild
-
-So the **counts and kinship semantics are faithful**, while the exact hidden family micro-topology is a reasonable reconstruction rather than something explicitly enumerated in the paper text.
-
-## Output-Specific Notes
-
-### Flat Table
-
-The flat dataset is:
-
-- one CSV file
-- one row per candidate atom
-- target column: `label`
-- joined source/target person attributes
-- aligned with the relational atoms by `atom_id`
-
-Flat-table validation passed with:
-
-- `44,965` rows
-- `39` columns
-- no missing values
-- both classes present in train
-
-### Relational Package
-
-The relational dataset includes:
-
-- `families.csv`
-- `persons.csv`
-- `marriages.csv`
-- `parent_child_edges.csv`
-- `relation_types.csv`
-- `pair_relation_atoms.csv`
-
-All declared PK/FK checks passed with zero violations.
+- The package includes one deterministic synthetic family world, not a recovered unpublished original generator output.
+- The exact low-level family topology is reconstructed from the stated constraints and counts.
+- The split logic is materialized as columns on every atom, which makes the dataset easy to audit and reuse.
+- The flat export produced by the generator is omitted from this curated package because it is redundant for the included experiments.
 
 ## Bottom Line
 
-If your criterion is "does this preserve the paper's family-experiment scale, relation inventory, disjoint-family assumption, and split logic in a usable dataset package?", the answer is **yes**.
-
-If your criterion is "is this a byte-for-byte reproduction of the original unpublished family generator?", the answer is **no**. The exact internal family topology is reconstructed from the paper's stated constraints and counts, then exported in the flat and relational forms you requested.
+The packaged relational dataset preserves the intended family-experiment scale, relation inventory, disjoint-family assumption, closed-world positive/negative labeling, and split logic. It should not be described as a byte-for-byte reproduction of an unpublished original data file.

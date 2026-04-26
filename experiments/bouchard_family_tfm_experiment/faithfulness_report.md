@@ -1,130 +1,72 @@
-# TFM Faithfulness Report
+# Family Experiment Faithfulness Report
 
-This report covers the TFM experiment scripts now available for the Bouchard setups.
+This note records what the packaged family experiment implements relative to the Bouchard-style inductive-abilities setup.
 
-## Available Runners
+## Current Scope
 
-Already present before this change:
+The packaged experiment covers the synthetic family/kinship benchmark only. The atomic binary-relation benchmark is implemented separately in [../bouchard_atomic_tfm_experiment](../bouchard_atomic_tfm_experiment).
 
-- `../bouchard_tfm_experiment/run_bouchard_countries_experiment.py`
-- `../bouchard_tfm_experiment/run_bouchard_countries_overnight.py`
-
-Added in this change:
+The runnable family files included in this package are:
 
 - [run_bouchard_family_experiment.py](run_bouchard_family_experiment.py)
 - [run_bouchard_family_overnight.py](run_bouchard_family_overnight.py)
-- [README.md](README.md)
+- [build_bouchard_family_datasets.py](../../scripts/build_bouchard_family_datasets.py)
 
-## What Is Covered
+## Dataset Correspondence
 
-### 2015 Bouchard Countries Setup
+The included dataset is [datasets/bouchard_family_relational](../../datasets/bouchard_family_relational). It is a normalized relational table with closed-world binary labels for every candidate triple:
 
-Covered by the existing runner in `../bouchard_tfm_experiment`.
+```text
+(relation, source_person_id, target_person_id) -> label
+```
 
-That script already supports:
+The generated package contains:
 
-- the `isInside` / `isNeighbor` task
-- continent-wise holdout
-- `TabPFN`
-- `TabICL`
-- single runs and overnight suites
+- `5` disjoint synthetic families.
+- `115` people.
+- `17` kinship relations.
+- `44,965` candidate relation atoms.
+- Positive and negative examples for each relation, produced by closed-world completion over within-family ordered pairs.
 
-### 2019 Bouchard Family / Kinship Setup
+The experiment runner uses only the symbolic triple columns as model features. Family-construction metadata such as sex, generation, branch, and role code is retained in the dataset files for auditability, but it is not used as model input by the runner.
 
-Covered by the new runner in this folder.
+## Split Correspondence
 
-The new family runner is faithful on these points:
+The runner implements the three family protocols:
 
-- input dataset: the generated family dataset at `datasets/bouchard_family_relational`
-- candidate facts are binary kinship atoms
-- feature view is the minimal Bouchard-style triple representation:
-  - `relation`
-  - `source_person_id`
-  - `target_person_id`
-- split regimes:
-  - `random`
-  - `evidence`
-  - `family`
-- `p` values:
-  - `0.8`
-  - `0.4`
-  - `0.2`
-  - `0.1`
-- `family` split also supports `p = 0.0`
-- default run count is `10`, matching the paper's repeated-run evaluation style
-- outputs include per-run results and aggregated summaries
+- `random`: atom-level interpolation within the generated families.
+- `evidence`: core parent/child relations are supplied as evidence while derived relations are partially observed.
+- `family`: one family is held out, with optional support facts from that same family controlled by `p`.
 
-## What The New Family Script Does
+The `family` split can include `p = 0.0` through `--include-family-zero`. This is the strongest family protocol in this runner because the held-out family's derived facts are not available as support examples.
 
-For each configuration, it:
+## Known Deviations
 
-- builds the requested split regime
-- fits `TabPFN` and/or `TabICL`
-- evaluates on the held-out test set
-- records:
-  - average precision
-  - ROC AUC
-  - F1
-  - precision
-  - recall
-  - accuracy
-  - fit / predict time
+The current implementation is faithful to the tabular TFM version of the benchmark, not to the original model family used in the 2019 paper.
 
-It writes:
+Important differences:
 
-- `results/per_run_results.csv`
-- `results/summary_by_model_split_p_relation.csv`
-- `results/summary_overall_by_model_split_p.csv`
-- `results/bouchard_family_comparable_summary.csv`
-- `results/findings.md`
-- `results/metadata.json`
+- The models are `TabPFN` and `TabICL`, not latent-factor or tensor-factorization models.
+- The benchmark uses generated synthetic family instances rather than a recovered original data file.
+- Metrics include threshold-dependent scores such as F1, precision, and recall in addition to average precision.
+- Threshold tuning, when enabled, is performed on the validation split and should be reported separately from fixed-threshold results.
 
-## Deliberate Deviations
+These differences mean that the experiment is appropriate for evaluating whether TFMs exploit the tabular relational representation, but it should not be described as an exact reproduction of the original training pipeline.
 
-These are the main places where the family runner is pragmatic rather than a literal reproduction:
+## Validation Pointers
 
-- It runs on one fixed synthetic family world that was generated locally, rather than regenerating a fresh family world per run.
-- The held-out family defaults to `family_05`, rather than cycling holdout families automatically.
-- The script includes optional threshold-based classification metrics because TFMs return probabilities and these diagnostics are useful, but the paper-aligned metric remains available through average precision.
-- There is no latent-rank sweep because that part is specific to the original latent factor models, not to TFMs.
+Useful audit files:
 
-## What Is Not Yet Covered
+- [validation_report.md](../../datasets/bouchard_family_relational/validation_report.md)
+- [relation_types.csv](../../datasets/bouchard_family_relational/relation_types.csv)
+- [pair_relation_atoms.csv](../../datasets/bouchard_family_relational/pair_relation_atoms.csv)
 
-The current new TFM runner covers the **family experiment** only.
+Useful dry run:
 
-It does **not** yet implement the separate 2019 **atomic binary-relation property** experiment family:
-
-- symmetric
-- antisymmetric
-- transitive
-- symmetric + transitive
-- antisymmetric + transitive
-- plus the reflexive / irreflexive appendix cases
-
-So the current TFM coverage is:
-
-- 2015 countries: covered
-- 2019 family: covered
-- 2019 atomic relation properties: not yet scripted here
-
-## Validation Performed
-
-The new family scripts were checked locally with:
-
-- Python compile:
-  - `python3 -m py_compile ...`
-- dry-run of the main family runner:
-  - dataset loaded correctly
-  - `5` families
-  - `17` relations
-  - `44,965` atoms
-  - `130` planned configurations for the full `random/evidence/family` grid with `10` runs and `p in {0.8,0.4,0.2,0.1}` plus family `p=0.0`
-- dry-run of the overnight launcher:
-  - smoke command rendered correctly
-  - full paper-style command rendered correctly
-
-## Bottom Line
-
-If your criterion is "can I now rerun the Bouchard TFM setups for countries and family later on a GPU machine?", the answer is **yes**.
-
-If your criterion is "is every experiment family from the 2019 paper now implemented for TFMs?", the answer is **no**. The atomic relation-property runner is still missing.
+```bash
+python experiments/bouchard_family_tfm_experiment/run_bouchard_family_experiment.py \
+  --data-root datasets/bouchard_family_relational \
+  --output-dir experiments/bouchard_family_tfm_experiment \
+  --include-family-zero \
+  --dry-run
+```

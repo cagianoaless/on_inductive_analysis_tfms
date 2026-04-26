@@ -1,16 +1,27 @@
-# Bouchard Family Datasets
+# Bouchard Family Dataset
 
-This directory contains one synthetic family-kinship world exported in two forms:
+This curated package includes the normalized synthetic family-kinship relational dataset:
 
-- `bouchard_family_flat/`: one denormalized flat table for tabular models
-- `bouchard_family_relational/`: a normalized multi-table relational package
+- [bouchard_family_relational/](../bouchard_family_relational)
 
-Design choices:
+The generator can also create a denormalized flat export, but that flat table is not committed here because the packaged experiments use the relational triples directly.
+
+Current included dataset shape:
 
 - `5` disjoint families
 - `23` persons per family
+- `115` persons total
 - `17` kinship relations
-- only within-family candidate atoms are materialized, matching the paper-scale family count
-- split columns include a random split plus paper-inspired evidence and family holdouts
+- `44,965` within-family candidate relation atoms
+- closed-world labels for `(relation, source_person_id, target_person_id)`
 
-The flat and relational versions are aligned at the `atom_id` level.
+The included validation report is:
+
+- [bouchard_family_relational/validation_report.md](../bouchard_family_relational/validation_report.md)
+
+To regenerate the family dataset from the repository root:
+
+```bash
+python scripts/build_bouchard_family_datasets.py \
+  --output-root datasets
+```

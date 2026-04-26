@@ -1,58 +1,82 @@
 # Bouchard Family TFM Experiment
 
-This folder contains launchers to rerun the **family / kinship** part of the 2019 Bouchard paper with:
+This experiment tests `TabPFN` and `TabICL` on the synthetic family/kinship relational dataset. It evaluates whether tabular foundation models can use in-context relational facts to predict held-out kinship triples.
 
-- `TabPFN-2.5`
-- `TabICLv2`
+The available runners are:
 
-The experiment reads the generated family dataset from:
+- [run_bouchard_family_experiment.py](run_bouchard_family_experiment.py): direct experiment runner.
+- [run_bouchard_family_overnight.py](run_bouchard_family_overnight.py): launcher for a smoke run plus the full suite.
+
+The dataset generator is:
+
+- [build_bouchard_family_datasets.py](../../scripts/build_bouchard_family_datasets.py)
+
+## Dataset
+
+The generated relational dataset is included at:
 
 - [datasets/bouchard_family_relational](../../datasets/bouchard_family_relational)
 
-Seed-specific `dataset_groups/` outputs from the working tree were intentionally not included in this curated package because they duplicate the relational family dataset.
+It contains five disjoint synthetic families, 115 people, 17 kinship relations, and 44,965 closed-world candidate atoms of the form:
 
-and evaluates the paper's three split regimes:
+```text
+(relation, source_person_id, target_person_id) -> label
+```
 
-- `random`
-- `evidence`
-- `family`
+The experiment uses the minimal feature view needed for the relational task: `relation`, `source_person_id`, and `target_person_id`. It does not pass engineered attributes such as sex, generation, branch, or role code as model features.
 
-## Main Script
-
-The main runner is:
-
-- [run_bouchard_family_experiment.py](run_bouchard_family_experiment.py)
-
-Dry-run the full schedule without loading models:
+To regenerate the family dataset from the repository root:
 
 ```bash
-cd <repo-root>
+python scripts/build_bouchard_family_datasets.py \
+  --output-root datasets
+```
+
+## Split Protocols
+
+The runner supports three split regimes:
+
+- `random`: random atom-level split stratified by relation, family, and label.
+- `evidence`: core relations are always available as evidence; derived relations are partially observed according to `p`.
+- `family`: one family is held out; a fraction `p` of that held-out family's derived facts is available as in-context support.
+
+The `family` split also supports `p = 0.0` with `--include-family-zero`. In that setting, derived facts from the held-out family are absent from the training context, so the task is closer to transfer across family instances than interpolation within one family.
+
+## Direct Runner
+
+Dry-run the schedule without loading models:
+
+```bash
 python experiments/bouchard_family_tfm_experiment/run_bouchard_family_experiment.py \
   --data-root datasets/bouchard_family_relational \
   --output-dir experiments/bouchard_family_tfm_experiment \
-  --dry-run --include-family-zero
+  --include-family-zero \
+  --dry-run
 ```
 
-To run on another generated dataset, pass its relational dataset directory through `--data-root`.
-
-Paper-style full run on GPU:
+Run the full family suite on GPU:
 
 ```bash
-cd <repo-root>
-TABPFN_DISABLE_TELEMETRY=1 conda run --no-capture-output -n tfms-a python experiments/bouchard_family_tfm_experiment/run_bouchard_family_experiment.py \
+TABPFN_DISABLE_TELEMETRY=1 python experiments/bouchard_family_tfm_experiment/run_bouchard_family_experiment.py \
   --data-root datasets/bouchard_family_relational \
   --output-dir experiments/bouchard_family_tfm_experiment \
+  --tabpfn-model-path /path/to/tabpfn-classifier.ckpt \
+  --tabicl-model-path /path/to/tabicl-classifier.ckpt \
   --device cuda \
   --include-family-zero \
-  --num-runs 10 \
   --splits random,evidence,family \
-  --p-values 0.8,0.4,0.2,0.1
+  --p-values 0.8,0.4,0.2,0.1 \
+  --num-runs 10
 ```
 
-Useful smoke run:
+Run a small family-split smoke test:
 
 ```bash
-TABPFN_DISABLE_TELEMETRY=1 conda run --no-capture-output -n tfms-a python run_bouchard_family_experiment.py \
+TABPFN_DISABLE_TELEMETRY=1 python experiments/bouchard_family_tfm_experiment/run_bouchard_family_experiment.py \
+  --data-root datasets/bouchard_family_relational \
+  --output-dir experiments/bouchard_family_tfm_experiment \
+  --tabpfn-model-path /path/to/tabpfn-classifier.ckpt \
+  --tabicl-model-path /path/to/tabicl-classifier.ckpt \
   --device cuda \
   --splits family \
   --p-values 0.1 \
@@ -62,40 +86,52 @@ TABPFN_DISABLE_TELEMETRY=1 conda run --no-capture-output -n tfms-a python run_bo
   --max-test-rows 2500
 ```
 
-## Overnight Launcher
+To reproduce the tuned-threshold summaries, add:
 
-The suite launcher is:
-
-- [run_bouchard_family_overnight.py](run_bouchard_family_overnight.py)
-
-Dry-run the command plan:
-
-```bash
-cd <repo-root>
-python experiments/bouchard_family_tfm_experiment/run_bouchard_family_overnight.py --dry-run
+```text
+--threshold-mode tune_per_relation_f1
 ```
 
-Run the smoke step plus the full paper-style suite:
+## Overnight Launcher
+
+Dry-run the launcher plan:
 
 ```bash
-TABPFN_DISABLE_TELEMETRY=1 conda run --no-capture-output -n tfms-a python run_bouchard_family_overnight.py \
+python experiments/bouchard_family_tfm_experiment/run_bouchard_family_overnight.py \
+  --data-root datasets/bouchard_family_relational \
+  --tabpfn-model-path /path/to/tabpfn-classifier.ckpt \
+  --tabicl-model-path /path/to/tabicl-classifier.ckpt \
+  --dry-run
+```
+
+Run the smoke step plus the full suite:
+
+```bash
+TABPFN_DISABLE_TELEMETRY=1 python experiments/bouchard_family_tfm_experiment/run_bouchard_family_overnight.py \
+  --data-root datasets/bouchard_family_relational \
+  --tabpfn-model-path /path/to/tabpfn-classifier.ckpt \
+  --tabicl-model-path /path/to/tabicl-classifier.ckpt \
   --device cuda \
   --num-runs 10
 ```
 
-Smoke only:
+Run only the smoke step:
 
 ```bash
-TABPFN_DISABLE_TELEMETRY=1 conda run --no-capture-output -n tfms-a python run_bouchard_family_overnight.py \
+TABPFN_DISABLE_TELEMETRY=1 python experiments/bouchard_family_tfm_experiment/run_bouchard_family_overnight.py \
+  --data-root datasets/bouchard_family_relational \
+  --tabpfn-model-path /path/to/tabpfn-classifier.ckpt \
+  --tabicl-model-path /path/to/tabicl-classifier.ckpt \
   --device cuda \
   --smoke-only
 ```
 
 ## Outputs
 
-Each run writes under its chosen `output-dir`:
+Each direct run writes `data/` and `results/` under the selected `--output-dir`. The overnight launcher writes each step under its selected `--run-root`.
 
-- `data/dataset_summary.json`
+Main output files:
+
 - `results/planned_runs.csv`
 - `results/per_run_results.csv`
 - `results/thresholds.csv`
@@ -105,10 +141,4 @@ Each run writes under its chosen `output-dir`:
 - `results/metadata.json`
 - `results/findings.md`
 
-## Notes
-
-- The script uses the **minimal Bouchard-faithful feature view** of each atom: `relation`, `source_person_id`, `target_person_id`.
-- `random` and `evidence` use the requested `p` values.
-- `family` also supports `p = 0.0` via `--include-family-zero`.
-- Threshold tuning, if enabled, uses the validation split. The paper metric is still available via average precision in the outputs.
-- The original `countries` TFM experiment is not part of this curated Bouchard family/atomic package.
+Archived result CSVs from previous runs are included under [results/family](../../results/family).

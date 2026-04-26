@@ -58,7 +58,7 @@ Read these files:
 - [datasets/bouchard_family_relational/validation_report.md](../datasets/bouchard_family_relational/validation_report.md)
 - [datasets/faithfulness_report.md](../datasets/docs/faithfulness_report.md)
 
-The flat denormalized family export from the original working tree is not included in this curated package because the experiments use the relational triples.
+The flat denormalized family export can be regenerated, but it is not included in this curated package because the experiments use the relational triples.
 
 These already tell you:
 
@@ -249,9 +249,17 @@ This is the hardest transfer setting.
 
 ## 8. How To Check The Flat Table
 
-The flat file is:
+The curated repo folder does not include the flat table because the experiments use the normalized relational triples. If you need the flat export, regenerate it from the repository root:
 
-- `datasets/bouchard_family_flat/family_kinship_flat.csv` in the original working tree; omitted here as redundant with the relational export.
+```bash
+python scripts/build_bouchard_family_datasets.py \
+  --output-root datasets
+```
+
+That command creates:
+
+- `datasets/bouchard_family_flat/family_kinship_flat.csv`
+- `datasets/bouchard_family_relational/pair_relation_atoms.csv`
 
 You want to check:
 
@@ -260,32 +268,21 @@ You want to check:
 - same labels
 - no nonsense in the joined features
 
-Fast check:
-
-```bash
-python3 check_flat_smoke_dataset.py \
-  --flat-path datasets/bouchard_family_flat/family_kinship_flat.csv \
-  --target label
-```
-
-This checks:
-
-- row count
-- split count
-- target balance
-- missingness
-- whether train has both classes
+No separate flat-table checker script is included in this curated package. Use the generated validation reports and, if needed, compare the regenerated flat table against `pair_relation_atoms.csv` by `atom_id`.
 
 ## 9. How To Check The Multiseed Groups
 
-Folder:
+The curated repo folder does not include prebuilt multiseed groups. They can be regenerated with:
 
-- `dataset_groups/` in the original working tree; omitted here to avoid duplicate generated datasets.
+```bash
+python scripts/build_bouchard_family_dataset_groups.py \
+  --output-root dataset_groups
+```
 
-Read:
+Then read:
 
-- `dataset_groups/collection_summary.csv` in the original working tree
-- `dataset_groups/manifest.json` in the original working tree
+- `dataset_groups/collection_summary.csv`
+- `dataset_groups/manifest.json`
 
 Then check each group's:
 
